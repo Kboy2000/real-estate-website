@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-luxury-white text-luxury-black;
+    font-family: 'Inter', 'Neue Montreal', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', 'Didot', serif;
+    @apply font-bold;
+  }
+}
+
+@layer utilities {
+  .text-gold-emboss {
+    background: linear-gradient(135deg, #D4AF37 0%, #E8D5A3 50%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 20px rgba(212, 175, 55, 0.3);
+  }
+  
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .luxury-shadow {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 40px rgba(212, 175, 55, 0.1);
+  }
+  
+  .luxury-shadow-lg {
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15), 0 0 60px rgba(212, 175, 55, 0.15);
+  }
+  
+  .marble-bg {
+    background: 
+      linear-gradient(135deg, #FAFAF8 0%, #F5F5F3 100%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(212, 175, 55, 0.03) 2px,
+        rgba(212, 175, 55, 0.03) 4px
+      );
+  }
+  
+  .dark .marble-bg {
+    background: 
+      linear-gradient(135deg, #1A1A1A 0%, #2C2C2C 100%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(212, 175, 55, 0.05) 2px,
+        rgba(212, 175, 55, 0.05) 4px
+      );
+  }
+  
+  .gold-gradient {
+    background: linear-gradient(135deg, #D4AF37 0%, #E8D5A3 100%);
+  }
+  
+  .premium-ease {
+    transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .hover-gold {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-gold:hover {
+    @apply text-luxury-gold;
+    transform: translateY(-2px);
+  }
+}
+
