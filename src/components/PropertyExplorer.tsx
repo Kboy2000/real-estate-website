@@ -1,12 +1,95 @@
-import { useState, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Environment, MeshReflectorMaterial } from '@react-three/drei'
+import { useState, useRef, useEffect } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { OrbitControls, PerspectiveCamera, Environment, MeshReflectorMaterial, Html, Text } from '@react-three/drei'
 import { motion } from 'framer-motion'
 import * as THREE from 'three'
-import { Home, Droplet, Flame } from 'lucide-react'
+import { Home, Droplet, Flame, X } from 'lucide-react'
+
+// Interactive Zone Component
+function InteractiveZone({ 
+  name, 
+  position, 
+  size, 
+  isSelected, 
+  onSelect,
+  measurement 
+}: { 
+  name: string
+  position: [number, number, number]
+  size: [number, number, number]
+  isSelected: boolean
+  onSelect: () => void
+  measurement: string
+}) {
+  const meshRef = useRef<THREE.Mesh>(null)
+
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.lookAt(0, 0, 0)
+    }
+  }, [])
+
+  return (
+    <group position={position}>
+      {/* Clickable area */}
+      <mesh 
+        ref={meshRef}
+        onClick={onSelect}
+        onPointerOver={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = 'pointer'
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto'
+        }}
+      >
+        <boxGeometry args={size} />
+        <meshStandardMaterial 
+          color={isSelected ? '#D4AF37' : '#FFFFFF'} 
+          transparent 
+          opacity={isSelected ? 0.3 : 0} 
+          emissive={isSelected ? '#D4AF37' : '#000000'}
+          emissiveIntensity={isSelected ? 0.5 : 0}
+        />
+      </mesh>
+      
+      {/* Measurement display */}
+      {isSelected && (
+        <Html position={[0, size[1] / 2 + 0.5, 0]} center>
+          <div className="bg-luxury-black/90 backdrop-blur-md text-luxury-white px-4 py-2 rounded-lg shadow-lg border border-luxury-gold">
+            <div className="font-serif font-bold text-lg mb-1">{name}</div>
+            <div className="text-sm text-luxury-gold">{measurement}</div>
+          </div>
+        </Html>
+      )}
+      
+      {/* Highlight ring */}
+      {isSelected && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+          <ringGeometry args={[size[0] / 2 + 0.5, size[0] / 2 + 0.7, 32]} />
+          <meshStandardMaterial 
+            color="#D4AF37" 
+            emissive="#D4AF37"
+            emissiveIntensity={1}
+            transparent
+            opacity={0.6}
+          />
+        </mesh>
+      )}
+    </group>
+  )
+}
 
 // Simple 3D House Model Component
-function HouseModel({ timeOfDay }: { timeOfDay: 'morning' | 'noon' | 'evening' }) {
+function HouseModel({ 
+  timeOfDay, 
+  selectedArea, 
+  onAreaSelect 
+}: { 
+  timeOfDay: 'morning' | 'noon' | 'evening'
+  selectedArea: string | null
+  onAreaSelect: (area: string) => void
+}) {
   const meshRef = useRef<THREE.Group>(null)
   
   useFrame((state) => {
@@ -24,18 +107,35 @@ function HouseModel({ timeOfDay }: { timeOfDay: 'morning' | 'noon' | 'evening' }
     }
   }
 
+  const getWindowIntensity = () => {
+    switch (timeOfDay) {
+      case 'morning': return 0.6
+      case 'noon': return 0.8
+      case 'evening': return 0.4
+      default: return 0.5
+    }
+  }
+
   return (
     <group ref={meshRef}>
       {/* Main Structure */}
       <mesh position={[0, 1, 0]} castShadow receiveShadow>
         <boxGeometry args={[4, 3, 4]} />
-        <meshStandardMaterial color="#F5F5F5" metalness={0.3} roughness={0.2} />
+        <meshStandardMaterial 
+          color={timeOfDay === 'evening' ? '#E8E8E8' : '#F5F5F5'} 
+          metalness={0.3} 
+          roughness={0.2} 
+        />
       </mesh>
       
       {/* Roof */}
       <mesh position={[0, 3.5, 0]} rotation={[0, 0.785, 0]} castShadow>
         <coneGeometry args={[3, 1.5, 4]} />
-        <meshStandardMaterial color="#D4AF37" metalness={0.8} roughness={0.1} />
+        <meshStandardMaterial 
+          color={timeOfDay === 'evening' ? '#B8941E' : '#D4AF37'} 
+          metalness={0.8} 
+          roughness={0.1} 
+        />
       </mesh>
       
       {/* Windows with glow */}
@@ -46,12 +146,16 @@ function HouseModel({ timeOfDay }: { timeOfDay: 'morning' | 'noon' | 'evening' }
             <meshStandardMaterial 
               color={getLightColor()} 
               emissive={getLightColor()} 
-              emissiveIntensity={0.5}
+              emissiveIntensity={getWindowIntensity()}
             />
           </mesh>
           <mesh position={[x * 1.5, 1.5, 2.02]}>
             <planeGeometry args={[1, 1.2]} />
-            <meshStandardMaterial color="#2C2C2C" transparent opacity={0.8} />
+            <meshStandardMaterial 
+              color={timeOfDay === 'evening' ? '#1A1A1A' : '#2C2C2C'} 
+              transparent 
+              opacity={0.8} 
+            />
           </mesh>
         </group>
       ))}
@@ -61,6 +165,36 @@ function HouseModel({ timeOfDay }: { timeOfDay: 'morning' | 'noon' | 'evening' }
         <boxGeometry args={[0.8, 1.5, 0.1]} />
         <meshStandardMaterial color="#1A1A1A" metalness={0.9} roughness={0.1} />
       </mesh>
+      
+      {/* Living Room Zone (left side of house) */}
+      <InteractiveZone
+        name="Living Room"
+        position={[-1.5, 1.5, 0]}
+        size={[1.5, 2, 2]}
+        isSelected={selectedArea === 'Living Room'}
+        onSelect={() => onAreaSelect('Living Room')}
+        measurement="18'6\" × 14'2\""
+      />
+      
+      {/* Kitchen Zone (right side of house) */}
+      <InteractiveZone
+        name="Kitchen"
+        position={[1.5, 1.5, 0]}
+        size={[1.5, 2, 2]}
+        isSelected={selectedArea === 'Kitchen'}
+        onSelect={() => onAreaSelect('Kitchen')}
+        measurement="16'0\" × 12'8\""
+      />
+      
+      {/* Pool Area Zone */}
+      <InteractiveZone
+        name="Pool Area"
+        position={[0, -0.1, -3]}
+        size={[3.5, 0.2, 2.5]}
+        isSelected={selectedArea === 'Pool Area'}
+        onSelect={() => onAreaSelect('Pool Area')}
+        measurement="32'0\" × 24'0\""
+      />
       
       {/* Pool */}
       <mesh position={[0, -0.1, -3]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -74,13 +208,75 @@ function HouseModel({ timeOfDay }: { timeOfDay: 'morning' | 'noon' | 'evening' }
           depthScale={1.2}
           minDepthThreshold={0.4}
           maxDepthThreshold={1.4}
-          color="#4A90E2"
+          color={timeOfDay === 'evening' ? '#2E5C8A' : timeOfDay === 'morning' ? '#6BA8E8' : '#4A90E2'}
           metalness={0.8}
-          mirror={0.8}
+          mirror={timeOfDay === 'noon' ? 0.9 : 0.7}
         />
       </mesh>
     </group>
   )
+}
+
+// Camera Controller
+function CameraController({ selectedArea, timeOfDay }: { selectedArea: string | null, timeOfDay: string }) {
+  const { camera } = useThree()
+
+  useEffect(() => {
+    // @ts-ignore - accessing global controls ref
+    const controls = window.controlsRef
+    if (!controls) return
+    
+    let targetPosition: [number, number, number] = [8, 6, 8]
+    let targetLookAt: [number, number, number] = [0, 1, 0]
+
+    switch (selectedArea) {
+      case 'Living Room':
+        targetPosition = [5, 5, 5]
+        targetLookAt = [-1.5, 1.5, 0]
+        break
+      case 'Kitchen':
+        targetPosition = [5, 5, -5]
+        targetLookAt = [1.5, 1.5, 0]
+        break
+      case 'Pool Area':
+        targetPosition = [0, 4, -6]
+        targetLookAt = [0, -0.1, -3]
+        break
+      default:
+        targetPosition = [8, 6, 8]
+        targetLookAt = [0, 1, 0]
+    }
+
+    // Animate camera
+    const startPos = new THREE.Vector3(...camera.position.toArray())
+    const endPos = new THREE.Vector3(...targetPosition)
+    const startLook = new THREE.Vector3(...controls.target.toArray())
+    const endLook = new THREE.Vector3(...targetLookAt)
+    
+    const duration = 1000 // ms
+    const startTime = Date.now()
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 0.5 - Math.cos(progress * Math.PI) / 2 // Smooth ease-in-out
+
+      const currentPos = startPos.clone().lerp(endPos, eased)
+      const currentLook = startLook.clone().lerp(endLook, eased)
+
+      camera.position.copy(currentPos)
+      controls.target.copy(currentLook)
+      controls.update()
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+    
+    animate()
+  }, [selectedArea, camera])
+
+  return null
 }
 
 const PropertyExplorer = () => {
@@ -88,10 +284,46 @@ const PropertyExplorer = () => {
   const [selectedArea, setSelectedArea] = useState<string | null>(null)
 
   const areas = [
-    { name: 'Living Room', icon: Home, position: 'left' },
-    { name: 'Kitchen', icon: Flame, position: 'center' },
-    { name: 'Pool Area', icon: Droplet, position: 'right' },
+    { name: 'Living Room', icon: Home, position: 'left', measurement: "18'6\" × 14'2\"" },
+    { name: 'Kitchen', icon: Flame, position: 'center', measurement: "16'0\" × 12'8\"" },
+    { name: 'Pool Area', icon: Droplet, position: 'right', measurement: "32'0\" × 24'0\"" },
   ]
+
+  const getEnvironmentPreset = () => {
+    switch (timeOfDay) {
+      case 'morning': return 'sunrise'
+      case 'noon': return 'sunset'
+      case 'evening': return 'night'
+      default: return 'sunset'
+    }
+  }
+
+  const getAmbientIntensity = () => {
+    switch (timeOfDay) {
+      case 'morning': return 0.5
+      case 'noon': return 0.7
+      case 'evening': return 0.3
+      default: return 0.5
+    }
+  }
+
+  const getDirectionalIntensity = () => {
+    switch (timeOfDay) {
+      case 'morning': return 1.2
+      case 'noon': return 1.8
+      case 'evening': return 0.6
+      default: return 1.5
+    }
+  }
+
+  const getDirectionalColor = () => {
+    switch (timeOfDay) {
+      case 'morning': return '#FFE5B4'
+      case 'noon': return '#FFFFFF'
+      case 'evening': return '#FFA07A'
+      default: return '#FFFFFF'
+    }
+  }
 
   return (
     <section id="properties" className="relative py-24 lg:py-32 bg-luxury-white overflow-hidden">
@@ -122,28 +354,49 @@ const PropertyExplorer = () => {
           >
             <Canvas shadows>
               <PerspectiveCamera makeDefault position={[8, 6, 8]} fov={50} />
-              <ambientLight intensity={0.4} />
+              <ambientLight intensity={getAmbientIntensity()} />
               <directionalLight
-                position={[10, 10, 5]}
-                intensity={timeOfDay === 'noon' ? 1.5 : timeOfDay === 'morning' ? 1 : 0.8}
+                position={timeOfDay === 'evening' ? [5, 8, 5] : [10, 10, 5]}
+                intensity={getDirectionalIntensity()}
+                color={getDirectionalColor()}
                 castShadow
                 shadow-mapSize-width={2048}
                 shadow-mapSize-height={2048}
               />
               <pointLight
-                position={[-10, 5, -10]}
-                intensity={timeOfDay === 'evening' ? 0.8 : 0.3}
-                color={timeOfDay === 'evening' ? '#FFA07A' : '#FFFFFF'}
+                position={timeOfDay === 'evening' ? [-5, 3, -5] : [-10, 5, -10]}
+                intensity={timeOfDay === 'evening' ? 1.2 : timeOfDay === 'morning' ? 0.5 : 0.3}
+                color={timeOfDay === 'evening' ? '#FFA07A' : timeOfDay === 'morning' ? '#FFE5B4' : '#FFFFFF'}
               />
-              <HouseModel timeOfDay={timeOfDay} />
+              {timeOfDay === 'evening' && (
+                <pointLight
+                  position={[0, 2, 0]}
+                  intensity={0.6}
+                  color="#FFD700"
+                />
+              )}
+              <HouseModel 
+                timeOfDay={timeOfDay} 
+                selectedArea={selectedArea}
+                onAreaSelect={(area) => setSelectedArea(selectedArea === area ? null : area)}
+              />
               <OrbitControls
+                ref={(controls) => {
+                  if (controls) {
+                    // @ts-ignore
+                    window.controlsRef = controls
+                  }
+                }}
                 enablePan={false}
-                minDistance={6}
+                minDistance={4}
                 maxDistance={15}
-                minPolarAngle={Math.PI / 4}
+                minPolarAngle={Math.PI / 6}
                 maxPolarAngle={Math.PI / 2.2}
+                enableDamping
+                dampingFactor={0.05}
               />
-              <Environment preset="sunset" />
+              <CameraController selectedArea={selectedArea} timeOfDay={timeOfDay} />
+              <Environment preset={getEnvironmentPreset()} />
             </Canvas>
 
             {/* Time of Day Controls */}
@@ -209,10 +462,24 @@ const PropertyExplorer = () => {
                       <h4 className="text-xl font-serif font-bold text-luxury-black mb-1">
                         {area.name}
                       </h4>
-                      <p className="text-sm text-luxury-black/60">
-                        Click to highlight this area in the 3D model
+                      <p className="text-sm text-luxury-black/60 mb-2">
+                        {area.measurement}
+                      </p>
+                      <p className="text-xs text-luxury-black/50">
+                        Click to explore this area in 3D
                       </p>
                     </div>
+                    {isSelected && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedArea(null)
+                        }}
+                        className="p-2 hover:bg-luxury-gold/20 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4 text-luxury-gold" />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               )

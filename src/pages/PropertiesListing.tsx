@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   Search, 
@@ -13,6 +13,7 @@ import {
 import { properties, filterProperties, searchProperties, Property } from '../data/properties'
 
 const PropertiesListing = () => {
+  const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
@@ -23,6 +24,23 @@ const PropertiesListing = () => {
     minBaths: '',
     location: '',
   })
+
+  // Read URL params on mount
+  useEffect(() => {
+    const urlSearch = searchParams.get('search')
+    const urlMinPrice = searchParams.get('minPrice')
+    const urlMaxPrice = searchParams.get('maxPrice')
+
+    if (urlSearch) {
+      setSearchQuery(urlSearch)
+    }
+    if (urlMinPrice) {
+      setFilters(prev => ({ ...prev, minPrice: urlMinPrice }))
+    }
+    if (urlMaxPrice) {
+      setFilters(prev => ({ ...prev, maxPrice: urlMaxPrice }))
+    }
+  }, [searchParams])
 
   const filteredProperties = useMemo(() => {
     let result: Property[] = properties

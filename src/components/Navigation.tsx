@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, Home, Search, Heart, User, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
+import SearchModal from './SearchModal'
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -39,7 +41,13 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
+          <Link 
+            to="/" 
+            className="flex items-center space-x-2 group"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          >
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -93,17 +101,33 @@ const Navigation = () => {
             <motion.button
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.9 }}
+              onClick={() => setIsSearchModalOpen(true)}
               className="p-2 text-luxury-black hover:text-luxury-gold premium-ease"
+              title="Search Properties"
             >
               <Search className="w-5 h-5" />
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: -5 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-2 text-luxury-black hover:text-luxury-gold premium-ease"
-            >
-              <Heart className="w-5 h-5" />
-            </motion.button>
+            {isAuthenticated ? (
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => navigate('/favorites')}
+                className="p-2 text-luxury-black hover:text-red-500 premium-ease"
+                title="My Favorites"
+              >
+                <Heart className="w-5 h-5" />
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => navigate('/login')}
+                className="p-2 text-luxury-black hover:text-red-500 premium-ease"
+                title="Sign in to view favorites"
+              >
+                <Heart className="w-5 h-5" />
+              </motion.button>
+            )}
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <Link
@@ -164,6 +188,35 @@ const Navigation = () => {
             className="lg:hidden bg-luxury-white/98 backdrop-blur-xl border-t border-luxury-champagne"
           >
             <div className="px-6 py-6 space-y-4">
+              <button
+                onClick={() => {
+                  setIsSearchModalOpen(true)
+                  setIsMobileMenuOpen(false)
+                }}
+                className="flex items-center space-x-2 w-full text-lg font-medium text-luxury-black hover:text-luxury-gold premium-ease"
+              >
+                <Search className="w-5 h-5" />
+                <span>Search</span>
+              </button>
+              {isAuthenticated ? (
+                <Link
+                  to="/favorites"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 text-lg font-medium text-luxury-black hover:text-red-500 premium-ease"
+                >
+                  <Heart className="w-5 h-5" />
+                  <span>Favorites</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 text-lg font-medium text-luxury-black hover:text-red-500 premium-ease"
+                >
+                  <Heart className="w-5 h-5" />
+                  <span>Favorites</span>
+                </Link>
+              )}
               {navItems.map((item) => (
                 item.href.startsWith('/') ? (
                   <Link
@@ -227,6 +280,9 @@ const Navigation = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
     </motion.nav>
   )
 }
