@@ -17,7 +17,7 @@ const Signup = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  
+
   const { signup } = useAuth()
   const navigate = useNavigate()
 
@@ -58,13 +58,13 @@ const Signup = () => {
       formData.password,
       formData.phone || undefined
     )
-    
+
     if (success) {
       navigate('/dashboard')
     } else {
       setError('An account with this email already exists')
     }
-    
+
     setIsLoading(false)
   }
 
@@ -96,9 +96,9 @@ const Signup = () => {
           >
             <Home className="w-7 h-7 text-luxury-white" />
           </motion.div>
-            <span className="text-3xl font-serif font-bold text-luxury-black group-hover:text-luxury-gold premium-ease">
-              LUXE
-            </span>
+          <span className="text-3xl font-serif font-bold text-luxury-black group-hover:text-luxury-gold premium-ease">
+            LUXE
+          </span>
         </Link>
 
         {/* Signup Card */}
@@ -206,15 +206,14 @@ const Signup = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                
+
                 {/* Password Requirements */}
                 {formData.password && (
                   <div className="mt-3 space-y-1">
                     {passwordRequirements.map((req, index) => (
                       <div key={index} className="flex items-center space-x-2 text-xs">
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                          req.met ? 'bg-luxury-gold' : 'bg-luxury-champagne'
-                        }`}>
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${req.met ? 'bg-luxury-gold' : 'bg-luxury-champagne'
+                          }`}>
                           {req.met && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <span className={req.met ? 'text-luxury-gold' : 'text-luxury-black/50'}>
@@ -264,8 +263,8 @@ const Signup = () => {
                     onChange={(e) => setAgreedToTerms(e.target.checked)}
                     className="mt-1 w-4 h-4 text-luxury-gold border-luxury-champagne rounded focus:ring-luxury-gold"
                   />
-                    <span className="text-sm text-luxury-black/70">
-                      I agree to the{' '}
+                  <span className="text-sm text-luxury-black/70">
+                    I agree to the{' '}
                     <Link to="/terms" className="text-luxury-gold hover:underline">
                       Terms of Service
                     </Link>{' '}
@@ -300,6 +299,16 @@ const Signup = () => {
                   Sign In
                 </Link>
               </p>
+            </div>
+
+            {/* Agent Login Link */}
+            <div className="mt-6 text-center border-t border-luxury-champagne/30 pt-6">
+              <Link
+                to="/agent/login"
+                className="text-sm text-luxury-black/60 hover:text-luxury-gold premium-ease"
+              >
+                Are you an agent? <span className="font-semibold">Log in here</span>
+              </Link>
             </div>
           </motion.div>
         </div>

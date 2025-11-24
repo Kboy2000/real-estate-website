@@ -10,7 +10,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -20,13 +20,13 @@ const Login = () => {
     setIsLoading(true)
 
     const success = await login(email, password)
-    
+
     if (success) {
       navigate('/dashboard')
     } else {
       setError('Invalid email or password. Please try again.')
     }
-    
+
     setIsLoading(false)
   }
 
@@ -51,9 +51,9 @@ const Login = () => {
           >
             <Home className="w-7 h-7 text-luxury-white" />
           </motion.div>
-            <span className="text-3xl font-serif font-bold text-luxury-black group-hover:text-luxury-gold premium-ease">
-              LUXE
-            </span>
+          <span className="text-3xl font-serif font-bold text-luxury-black group-hover:text-luxury-gold premium-ease">
+            LUXE
+          </span>
         </Link>
 
         {/* Login Card */}
@@ -131,7 +131,7 @@ const Login = () => {
                     type="checkbox"
                     className="w-4 h-4 text-luxury-gold border-luxury-champagne rounded focus:ring-luxury-gold"
                   />
-                    <span className="text-sm text-luxury-black/70">Remember me</span>
+                  <span className="text-sm text-luxury-black/70">Remember me</span>
                 </label>
                 <Link
                   to="/forgot-password"
@@ -164,6 +164,16 @@ const Login = () => {
                   Create Account
                 </Link>
               </p>
+            </div>
+
+            {/* Agent Login Link */}
+            <div className="mt-6 text-center border-t border-luxury-champagne/30 pt-6">
+              <Link
+                to="/agent/login"
+                className="text-sm text-luxury-black/60 hover:text-luxury-gold premium-ease"
+              >
+                Are you an agent? <span className="font-semibold">Log in here</span>
+              </Link>
             </div>
           </motion.div>
         </div>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react'
 
@@ -12,7 +13,7 @@ const Footer = () => {
   const footerLinks = {
     properties: ['Browse Properties', 'Luxury Estates', 'Smart Homes', 'Virtual Tours'],
     services: ['Property Management', 'Investment Advisory', 'Concierge Services', 'Smart Home Setup'],
-    company: ['About Us', 'Our Team', 'Careers', 'Press'],
+    company: ['About Us', 'Our Team', 'Careers', 'Press', 'Agent Portal'],
     legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Disclaimer'],
   }
 
@@ -41,7 +42,7 @@ const Footer = () => {
                 <span className="text-3xl font-serif font-bold text-luxury-black">LUXE</span>
               </div>
               <p className="text-luxury-black/70 leading-relaxed max-w-md">
-                Redefining luxury real estate with cutting-edge smart home technology. 
+                Redefining luxury real estate with cutting-edge smart home technology.
                 Where architectural excellence meets intelligent living.
               </p>
             </motion.div>
@@ -84,12 +85,18 @@ const Footer = () => {
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link}>
-                    <a
-                      href="#"
-                      className="text-luxury-black/70 hover:text-luxury-gold premium-ease inline-block"
-                    >
-                      {link}
-                    </a>
+                    {link === 'Agent Portal' ? (
+                      <Link to="/agent/login" className="text-luxury-black/70 hover:text-luxury-gold premium-ease inline-block">
+                        {link}
+                      </Link>
+                    ) : (
+                      <a
+                        href="#"
+                        className="text-luxury-black/70 hover:text-luxury-gold premium-ease inline-block"
+                      >
+                        {link}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
