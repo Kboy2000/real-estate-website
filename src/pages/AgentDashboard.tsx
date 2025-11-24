@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
-import { Plus, Calendar, Home, MapPin, DollarSign, Bed, Bath, Square, Clock, CheckCircle2 } from 'lucide-react'
+import { Plus, Calendar, Home, MapPin, DollarSign, Bed, Bath, Square, Clock, CheckCircle2, Pencil, Eye, X } from 'lucide-react'
 
 interface House {
     id: string
@@ -19,14 +19,19 @@ interface Inspection {
     id: string
     property: string
     client: string
+    email: string
+    phone: string
     date: string
     time: string
     status: 'confirmed' | 'pending'
+    message?: string
 }
 
 const AgentDashboard = () => {
     const { user } = useAuth()
     const [showAddModal, setShowAddModal] = useState(false)
+    const [editingListing, setEditingListing] = useState<House | null>(null)
+    const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null)
 
     // Mock Data State
     const [listings, setListings] = useState<House[]>([])
@@ -35,22 +40,28 @@ const AgentDashboard = () => {
             id: '1',
             property: 'Modern Hills Villa',
             client: 'John Smith',
+            email: 'john.smith@example.com',
+            phone: '(555) 123-4567',
             date: '2024-03-25',
             time: '10:00 AM',
-            status: 'confirmed'
+            status: 'confirmed',
+            message: 'Interested in the pool area and smart home features.'
         },
         {
             id: '2',
             property: 'Oceanfront Penthouse',
             client: 'Sarah Johnson',
+            email: 'sarah.j@example.com',
+            phone: '(555) 987-6543',
             date: '2024-03-26',
             time: '2:30 PM',
-            status: 'pending'
+            status: 'pending',
+            message: 'Would like to discuss financing options.'
         }
     ])
 
     // New Listing Form State
-    const [newListing, setNewListing] = useState({
+    const [formData, setFormData] = useState({
         title: '',
         price: '',
         location: '',
@@ -68,25 +79,66 @@ const AgentDashboard = () => {
         }
     }, [])
 
-    const handleAddListing = (e: React.FormEvent) => {
+    const handleSubmitListing = (e: React.FormEvent) => {
         e.preventDefault()
-        const listing: House = {
-            id: Date.now().toString(),
-            title: newListing.title,
-            price: newListing.price,
-            location: newListing.location,
-            beds: Number(newListing.beds),
-            baths: Number(newListing.baths),
-            sqft: Number(newListing.sqft),
-            image: newListing.image,
-            status: 'active'
+
+        if (editingListing) {
+            // Update existing listing
+            const updatedListings = listings.map(l =>
+                l.id === editingListing.id
+                    ? {
+                        ...l,
+                        title: formData.title,
+                        price: formData.price,
+                        location: formData.location,
+                        beds: Number(formData.beds),
+                        baths: Number(formData.baths),
+                        sqft: Number(formData.sqft),
+                        image: formData.image
+                    }
+                    : l
+            )
+            setListings(updatedListings)
+            localStorage.setItem('agent_listings', JSON.stringify(updatedListings))
+        } else {
+            // Create new listing
+            const listing: House = {
+                id: Date.now().toString(),
+                title: formData.title,
+                price: formData.price,
+                location: formData.location,
+                beds: Number(formData.beds),
+                baths: Number(formData.baths),
+                sqft: Number(formData.sqft),
+                image: formData.image,
+                status: 'active'
+            }
+            const updatedListings = [...listings, listing]
+            setListings(updatedListings)
+            localStorage.setItem('agent_listings', JSON.stringify(updatedListings))
         }
 
-        const updatedListings = [...listings, listing]
-        setListings(updatedListings)
-        localStorage.setItem('agent_listings', JSON.stringify(updatedListings))
+        closeModal()
+    }
+
+    const openEditModal = (listing: House) => {
+        setEditingListing(listing)
+        setFormData({
+            title: listing.title,
+            price: listing.price,
+            location: listing.location,
+            beds: listing.beds.toString(),
+            baths: listing.baths.toString(),
+            sqft: listing.sqft.toString(),
+            image: listing.image
+        })
+        setShowAddModal(true)
+    }
+
+    const closeModal = () => {
         setShowAddModal(false)
-        setNewListing({
+        setEditingListing(null)
+        setFormData({
             title: '',
             price: '',
             location: '',
@@ -169,13 +221,23 @@ const AgentDashboard = () => {
                                         key={house.id}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-6"
+                                        className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-6 group"
                                     >
-                                        <img
-                                            src={house.image}
-                                            alt={house.title}
-                                            className="w-48 h-32 object-cover rounded-xl"
-                                        />
+                                        <div className="relative w-48 h-32 rounded-xl overflow-hidden">
+                                            <img
+                                                src={house.image}
+                                                alt={house.title}
+                                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                            />
+                                            <div className="absolute top-2 right-2">
+                                                <button
+                                                    onClick={() => openEditModal(house)}
+                                                    className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm hover:bg-luxury-gold hover:text-white transition-colors"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
                                         <div className="flex-1 py-2">
                                             <div className="flex justify-between items-start mb-2">
                                                 <h3 className="text-xl font-bold text-luxury-black">{house.title}</h3>
@@ -218,9 +280,19 @@ const AgentDashboard = () => {
                                     <div className="p-3 bg-luxury-gold/10 text-luxury-gold rounded-xl">
                                         <Clock size={20} />
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-luxury-black">{inspection.property}</h4>
-                                        <p className="text-sm text-gray-500 mb-2">with {inspection.client}</p>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-bold text-luxury-black">{inspection.property}</h4>
+                                                <p className="text-sm text-gray-500 mb-2">with {inspection.client}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setSelectedInspection(inspection)}
+                                                className="p-2 text-gray-400 hover:text-luxury-gold transition-colors"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                        </div>
                                         <div className="flex items-center gap-3 text-xs font-medium">
                                             <span className="bg-gray-100 px-2 py-1 rounded-md text-gray-600">
                                                 {inspection.date}
@@ -237,114 +309,202 @@ const AgentDashboard = () => {
                 </div>
             </div>
 
-            {/* Add Listing Modal */}
-            {showAddModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                    >
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-serif font-bold text-luxury-black">Add New Property</h2>
-                            <button
-                                onClick={() => setShowAddModal(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                Cancel
-                            </button>
-                        </div>
+            {/* Add/Edit Listing Modal */}
+            <AnimatePresence>
+                {showAddModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-serif font-bold text-luxury-black">
+                                    {editingListing ? 'Edit Property' : 'Add New Property'}
+                                </h2>
+                                <button
+                                    onClick={closeModal}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
 
-                        <form onSubmit={handleAddListing} className="space-y-6">
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Property Title</label>
-                                    <input
-                                        type="text"
-                                        value={newListing.title}
-                                        onChange={(e) => setNewListing({ ...newListing, title: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="e.g. Modern Sunset Villa"
-                                        required
-                                    />
+                            <form onSubmit={handleSubmitListing} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Property Title</label>
+                                        <input
+                                            type="text"
+                                            value={formData.title}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="e.g. Modern Sunset Villa"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                                        <input
+                                            type="text"
+                                            value={formData.price}
+                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="$2,500,000"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                        <input
+                                            type="text"
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="Beverly Hills, CA"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Beds</label>
+                                        <input
+                                            type="number"
+                                            value={formData.beds}
+                                            onChange={(e) => setFormData({ ...formData, beds: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="4"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Baths</label>
+                                        <input
+                                            type="number"
+                                            value={formData.baths}
+                                            onChange={(e) => setFormData({ ...formData, baths: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="3.5"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Sqft</label>
+                                        <input
+                                            type="number"
+                                            value={formData.sqft}
+                                            onChange={(e) => setFormData({ ...formData, sqft: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="3500"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                                        <input
+                                            type="url"
+                                            value={formData.image}
+                                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
+                                            placeholder="https://..."
+                                            required
+                                        />
+                                    </div>
                                 </div>
+                                <button
+                                    type="submit"
+                                    className="w-full bg-luxury-gold text-luxury-black py-4 rounded-xl font-bold hover:bg-luxury-gold/90 transition-colors"
+                                >
+                                    {editingListing ? 'Update Property' : 'Add Property'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Inspection Details Modal */}
+            <AnimatePresence>
+                {selectedInspection && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-3xl p-8 max-w-md w-full"
+                        >
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
-                                    <input
-                                        type="text"
-                                        value={newListing.price}
-                                        onChange={(e) => setNewListing({ ...newListing, price: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="$2,500,000"
-                                        required
-                                    />
+                                    <h2 className="text-2xl font-serif font-bold text-luxury-black mb-1">
+                                        Inspection Details
+                                    </h2>
+                                    <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase ${selectedInspection.status === 'confirmed'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                        {selectedInspection.status}
+                                    </span>
                                 </div>
+                                <button
+                                    onClick={() => setSelectedInspection(null)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                                    <input
-                                        type="text"
-                                        value={newListing.location}
-                                        onChange={(e) => setNewListing({ ...newListing, location: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="Beverly Hills, CA"
-                                        required
-                                    />
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Property</label>
+                                    <p className="font-bold text-luxury-black text-lg">{selectedInspection.property}</p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Beds</label>
-                                    <input
-                                        type="number"
-                                        value={newListing.beds}
-                                        onChange={(e) => setNewListing({ ...newListing, beds: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="4"
-                                        required
-                                    />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Date</label>
+                                        <p className="font-medium text-luxury-black flex items-center gap-2">
+                                            <Calendar size={16} className="text-luxury-gold" />
+                                            {selectedInspection.date}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Time</label>
+                                        <p className="font-medium text-luxury-black flex items-center gap-2">
+                                            <Clock size={16} className="text-luxury-gold" />
+                                            {selectedInspection.time}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Baths</label>
-                                    <input
-                                        type="number"
-                                        value={newListing.baths}
-                                        onChange={(e) => setNewListing({ ...newListing, baths: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="3.5"
-                                        required
-                                    />
+
+                                <div className="border-t border-gray-100 pt-6">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Client Information</label>
+                                    <div className="space-y-3">
+                                        <p className="font-bold text-luxury-black">{selectedInspection.client}</p>
+                                        <p className="text-gray-600 text-sm">{selectedInspection.email}</p>
+                                        <p className="text-gray-600 text-sm">{selectedInspection.phone}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Sqft</label>
-                                    <input
-                                        type="number"
-                                        value={newListing.sqft}
-                                        onChange={(e) => setNewListing({ ...newListing, sqft: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="3500"
-                                        required
-                                    />
-                                </div>
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-                                    <input
-                                        type="url"
-                                        value={newListing.image}
-                                        onChange={(e) => setNewListing({ ...newListing, image: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-luxury-gold focus:ring-0"
-                                        placeholder="https://..."
-                                        required
-                                    />
+
+                                {selectedInspection.message && (
+                                    <div className="bg-gray-50 p-4 rounded-xl">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Message</label>
+                                        <p className="text-gray-600 text-sm italic">"{selectedInspection.message}"</p>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-4">
+                                    <button className="flex-1 bg-luxury-gold text-luxury-black py-3 rounded-xl font-bold hover:bg-luxury-gold/90 transition-colors">
+                                        Confirm
+                                    </button>
+                                    <button className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors">
+                                        Reschedule
+                                    </button>
                                 </div>
                             </div>
-                            <button
-                                type="submit"
-                                className="w-full bg-luxury-gold text-luxury-black py-4 rounded-xl font-bold hover:bg-luxury-gold/90 transition-colors"
-                            >
-                                Add Property
-                            </button>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

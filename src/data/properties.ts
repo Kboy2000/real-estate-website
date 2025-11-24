@@ -473,7 +473,50 @@ export const properties: Property[] = [
 ]
 
 export const getPropertyById = (id: string): Property | undefined => {
-  return properties.find(p => p.id === id)
+  // First check static properties
+  const staticProperty = properties.find(p => p.id === id)
+  if (staticProperty) return staticProperty
+
+  // Then check local storage
+  const storedListings = localStorage.getItem('agent_listings')
+  if (storedListings) {
+    const listings = JSON.parse(storedListings)
+    const listing = listings.find((l: any) => l.id === id)
+    if (listing) {
+      return {
+        id: listing.id,
+        name: listing.title,
+        location: listing.location,
+        city: listing.location.split(',')[0] || listing.location,
+        state: listing.location.split(',')[1]?.trim() || '',
+        country: 'USA',
+        price: parseInt(listing.price.replace(/[^0-9]/g, '')),
+        beds: listing.beds,
+        baths: listing.baths,
+        sqft: listing.sqft,
+        garage: 2,
+        year: new Date().getFullYear(),
+        type: 'Villa',
+        images: [listing.image],
+        description: 'Exclusive agent listing. Contact for more details.',
+        features: ['Agent Listed'],
+        amenities: [],
+        smartHomeFeatures: [],
+        personality: ['luxury'],
+        coordinates: { lat: 0, lng: 0 },
+        agent: {
+          name: 'Listing Agent',
+          email: 'agent@example.com',
+          phone: '(555) 000-0000',
+          avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80'
+        },
+        status: listing.status === 'active' ? 'available' : listing.status,
+        listedDate: new Date().toISOString()
+      }
+    }
+  }
+
+  return undefined
 }
 
 export const getPropertiesByPersonality = (personality: string): Property[] => {
@@ -482,7 +525,7 @@ export const getPropertiesByPersonality = (personality: string): Property[] => {
 
 export const searchProperties = (query: string): Property[] => {
   const lowerQuery = query.toLowerCase()
-  return properties.filter(p => 
+  return properties.filter(p =>
     p.name.toLowerCase().includes(lowerQuery) ||
     p.location.toLowerCase().includes(lowerQuery) ||
     p.city.toLowerCase().includes(lowerQuery) ||

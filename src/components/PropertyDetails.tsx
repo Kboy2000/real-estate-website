@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { getPropertyById } from '../data/properties'
 import InspectionBooking from './InspectionBooking'
-import { 
-  MapPin, 
-  Bed, 
-  Bath, 
-  Square, 
-  Car, 
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  Car,
   Calendar,
   Share2,
   Heart,
@@ -26,7 +26,7 @@ const PropertyDetails = () => {
   const [interestRate, setInterestRate] = useState(4.5)
   const [loanTerm, setLoanTerm] = useState(30)
   const [showBookingModal, setShowBookingModal] = useState(false)
-  
+
   const property = getPropertyById(id || '')
   const isFavorited = user?.favorites.includes(id || '') || false
 
@@ -51,7 +51,7 @@ const PropertyDetails = () => {
   const calculateMortgage = () => {
     const monthlyRate = interestRate / 100 / 12
     const numPayments = loanTerm * 12
-    const monthlyPayment = 
+    const monthlyPayment =
       (mortgageAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
       (Math.pow(1 + monthlyRate, numPayments) - 1)
     return monthlyPayment
@@ -82,10 +82,10 @@ const PropertyDetails = () => {
     <div className="min-h-screen bg-luxury-white pt-20">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-12">
         {/* Back Button */}
-          <Link
-            to="/"
-            className="inline-flex items-center space-x-2 text-luxury-black hover:text-luxury-gold premium-ease mb-8"
-          >
+        <Link
+          to="/"
+          className="inline-flex items-center space-x-2 text-luxury-black hover:text-luxury-gold premium-ease mb-8"
+        >
           <ChevronLeft className="w-5 h-5" />
           <span>Back to Properties</span>
         </Link>
@@ -101,9 +101,9 @@ const PropertyDetails = () => {
             alt={property.name}
             className="w-full h-full object-cover"
           />
-          
+
           <div className="absolute inset-0 bg-gradient-to-t from-luxury-black/60 to-transparent" />
-          
+
           <button
             onClick={prevImage}
             className="absolute left-6 top-1/2 -translate-y-1/2 p-4 glassmorphism rounded-full hover:bg-luxury-gold/20 premium-ease"
@@ -122,11 +122,10 @@ const PropertyDetails = () => {
               <button
                 key={index}
                 onClick={() => setCurrentImage(index)}
-                className={`h-2 rounded-full premium-ease ${
-                  currentImage === index
+                className={`h-2 rounded-full premium-ease ${currentImage === index
                     ? 'w-8 bg-luxury-gold'
                     : 'w-2 bg-white/50 hover:bg-white/80'
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -169,11 +168,10 @@ const PropertyDetails = () => {
                         addFavorite(id || '')
                       }
                     }}
-                    className={`p-3 glassmorphism rounded-full premium-ease ${
-                      isFavorited
+                    className={`p-3 glassmorphism rounded-full premium-ease ${isFavorited
                         ? 'bg-red-500/20 hover:bg-red-500/30'
                         : 'hover:bg-luxury-gold/20'
-                    }`}
+                      }`}
                   >
                     <Heart className={`w-5 h-5 ${isFavorited ? 'text-red-500 fill-red-500' : 'text-luxury-black'}`} />
                   </motion.button>
@@ -183,7 +181,7 @@ const PropertyDetails = () => {
               <div className="text-4xl font-serif font-bold text-luxury-gold mb-6">
                 ${property.price.toLocaleString()}
               </div>
-              
+
               {/* Agent Info */}
               <div className="flex items-center space-x-4 p-4 bg-luxury-champagne/10 rounded-xl mb-6">
                 <img
@@ -252,7 +250,7 @@ const PropertyDetails = () => {
                   </motion.div>
                 ))}
               </div>
-              
+
               {/* Smart Home Features */}
               {property.smartHomeFeatures.length > 0 && (
                 <div className="mb-8">
@@ -288,16 +286,16 @@ const PropertyDetails = () => {
                   {/* Rooms with gold outlines */}
                   <rect x="20" y="20" width="160" height="120" fill="none" stroke="#D4AF37" strokeWidth="2" />
                   <text x="100" y="85" textAnchor="middle" className="text-sm fill-luxury-black">Living Room</text>
-                  
+
                   <rect x="200" y="20" width="180" height="120" fill="none" stroke="#D4AF37" strokeWidth="2" />
                   <text x="290" y="85" textAnchor="middle" className="text-sm fill-luxury-black">Kitchen</text>
-                  
+
                   <rect x="20" y="160" width="120" height="120" fill="none" stroke="#D4AF37" strokeWidth="2" />
                   <text x="80" y="225" textAnchor="middle" className="text-sm fill-luxury-black">Master Bed</text>
-                  
+
                   <rect x="160" y="160" width="100" height="120" fill="none" stroke="#D4AF37" strokeWidth="2" />
                   <text x="210" y="225" textAnchor="middle" className="text-sm fill-luxury-black">Bedroom 2</text>
-                  
+
                   <rect x="280" y="160" width="100" height="120" fill="none" stroke="#D4AF37" strokeWidth="2" />
                   <text x="330" y="225" textAnchor="middle" className="text-sm fill-luxury-black">Bedroom 3</text>
                 </svg>
@@ -309,21 +307,18 @@ const PropertyDetails = () => {
               <h2 className="text-3xl font-serif font-bold text-luxury-black mb-6">
                 360° Virtual Tour
               </h2>
-              <div className="relative h-[400px] rounded-2xl overflow-hidden luxury-shadow">
-                <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/20 to-luxury-champagne/20 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-luxury-gold/20 flex items-center justify-center">
-                      <Calendar className="w-10 h-10 text-luxury-gold" />
-                    </div>
-                    <p className="text-luxury-black/70">Interactive 360° tour coming soon</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="mt-4 px-6 py-3 bg-luxury-gold text-luxury-white rounded-xl font-semibold hover:bg-luxury-gold-dark premium-ease"
-                    >
-                      Schedule Viewing
-                    </motion.button>
-                  </div>
+              <div className="relative h-[400px] rounded-2xl overflow-hidden luxury-shadow group">
+                <video
+                  className="w-full h-full object-cover"
+                  poster="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80"
+                  controls
+                >
+                  <source src="https://assets.mixkit.co/videos/preview/mixkit-modern-luxury-home-interior-2942-large.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium">360° Tour</span>
                 </div>
               </div>
             </div>
@@ -392,7 +387,7 @@ const PropertyDetails = () => {
               <h3 className="text-2xl font-serif font-bold text-luxury-black mb-6">
                 Mortgage Calculator
               </h3>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-luxury-black/70 mb-2">

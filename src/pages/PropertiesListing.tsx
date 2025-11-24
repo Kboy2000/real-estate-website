@@ -1,16 +1,16 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { 
-  Search, 
-  MapPin, 
-  Bed, 
-  Bath, 
-  Square, 
+import {
+  Search,
+  MapPin,
+  Bed,
+  Bath,
+  Square,
   SlidersHorizontal,
   X
 } from 'lucide-react'
-import { properties, filterProperties, searchProperties, Property } from '../data/properties'
+import { properties, Property } from '../data/properties'
 
 const PropertiesListing = () => {
   const [searchParams] = useSearchParams()
@@ -42,12 +42,69 @@ const PropertiesListing = () => {
     }
   }, [searchParams])
 
+  const [allProperties, setAllProperties] = useState<Property[]>([])
+
+  // Load properties from static data and localStorage
+  useEffect(() => {
+    const loadProperties = () => {
+      const storedListings = localStorage.getItem('agent_listings')
+      let agentProperties: Property[] = []
+
+      if (storedListings) {
+        const listings = JSON.parse(storedListings)
+        agentProperties = listings.map((listing: any) => ({
+          id: listing.id,
+          name: listing.title,
+          location: listing.location,
+          city: listing.location.split(',')[0] || listing.location,
+          state: listing.location.split(',')[1]?.trim() || '',
+          country: 'USA', // Default
+          price: parseInt(listing.price.replace(/[^0-9]/g, '')),
+          beds: listing.beds,
+          baths: listing.baths,
+          sqft: listing.sqft,
+          garage: 2, // Default
+          year: new Date().getFullYear(),
+          type: 'Villa', // Default
+          images: [listing.image],
+          description: 'Exclusive agent listing. Contact for more details.',
+          features: ['Agent Listed'],
+          amenities: [],
+          smartHomeFeatures: [],
+          personality: ['luxury'],
+          coordinates: { lat: 0, lng: 0 },
+          agent: {
+            name: 'Listing Agent',
+            email: 'agent@example.com',
+            phone: '(555) 000-0000',
+            avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80'
+          },
+          status: listing.status === 'active' ? 'available' : listing.status,
+          listedDate: new Date().toISOString()
+        }))
+      }
+
+      setAllProperties([...properties, ...agentProperties])
+    }
+
+    loadProperties()
+    // Listen for storage events to update real-time if changed in another tab
+    window.addEventListener('storage', loadProperties)
+    return () => window.removeEventListener('storage', loadProperties)
+  }, [])
+
   const filteredProperties = useMemo(() => {
-    let result: Property[] = properties
+    let result: Property[] = allProperties
 
     // Apply search
     if (searchQuery) {
-      result = searchProperties(searchQuery)
+      const lowerQuery = searchQuery.toLowerCase()
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(lowerQuery) ||
+        p.location.toLowerCase().includes(lowerQuery) ||
+        p.city.toLowerCase().includes(lowerQuery) ||
+        p.type.toLowerCase().includes(lowerQuery)
+      )
     }
 
     // Apply filters
@@ -60,11 +117,19 @@ const PropertiesListing = () => {
     if (filters.location) filterParams.location = filters.location
 
     if (Object.keys(filterParams).length > 0) {
-      result = filterProperties(filterParams)
+      result = result.filter(p => {
+        if (filters.type && p.type !== filters.type) return false
+        if (filters.minPrice && p.price < parseInt(filters.minPrice)) return false
+        if (filters.maxPrice && p.price > parseInt(filters.maxPrice)) return false
+        if (filters.minBeds && p.beds < parseInt(filters.minBeds)) return false
+        if (filters.minBaths && p.baths < parseInt(filters.minBaths)) return false
+        if (filters.location && !p.location.toLowerCase().includes(filters.location.toLowerCase())) return false
+        return true
+      })
     }
 
     return result
-  }, [searchQuery, filters])
+  }, [searchQuery, filters, allProperties])
 
   const clearFilters = () => {
     setFilters({
@@ -93,7 +158,7 @@ const PropertiesListing = () => {
             Explore <span className="text-gold-emboss">Properties</span>
           </h1>
           <p className="text-xl text-luxury-black/70">
-            Discover {properties.length} exclusive luxury properties worldwide
+            Discover {allProperties.length} exclusive luxury properties worldwide
           </p>
         </motion.div>
 
@@ -235,9 +300,9 @@ const PropertiesListing = () => {
 
         {/* Results Count */}
         <div className="mb-6">
-            <p className="text-luxury-black/70">
-              Showing <span className="font-semibold text-luxury-gold">{filteredProperties.length}</span> of {properties.length} properties
-            </p>
+          <p className="text-luxury-black/70">
+            Showing <span className="font-semibold text-luxury-gold">{filteredProperties.length}</span> of {allProperties.length} properties
+          </p>
         </div>
 
         {/* Properties Grid */}
