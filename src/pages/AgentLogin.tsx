@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { Building2, Key, Mail, ArrowRight, Loader2 } from 'lucide-react'
@@ -109,7 +109,10 @@ const AgentLogin = () => {
 
                     <div className="mt-8 text-center">
                         <p className="text-sm text-luxury-white/40">
-                            Restricted access for authorized agents only.
+                            New to Luxe?{' '}
+                            <Link to="/agent/signup" className="text-luxury-gold hover:text-luxury-gold/80 transition-colors font-semibold">
+                                Register as an Agent
+                            </Link>
                         </p>
                     </div>
                 </div>

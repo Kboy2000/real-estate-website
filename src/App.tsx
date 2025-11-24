@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard'
 import PropertiesListing from './pages/PropertiesListing'
 import Favorites from './pages/Favorites'
 import AgentLogin from './pages/AgentLogin'
+import AgentSignup from './pages/AgentSignup'
 import AgentDashboard from './pages/AgentDashboard'
 
 function Home() {
@@ -58,6 +59,7 @@ function App() {
             />
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/agent/login" element={<AgentLogin />} />
+            <Route path="/agent/signup" element={<AgentSignup />} />
             <Route
               path="/agent/dashboard"
               element={

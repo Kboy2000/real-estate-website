@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   loginAgent: (email: string, password: string) => Promise<boolean>
   signup: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
+  signupAgent: (name: string, email: string, password: string, phone?: string, licenseNumber?: string) => Promise<boolean>
   logout: () => void
   updateUser: (updates: Partial<User>) => void
   addFavorite: (propertyId: string) => void
@@ -169,6 +170,62 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true
   }
 
+  const signupAgent = async (
+    name: string,
+    email: string,
+    password: string,
+    phone?: string,
+    licenseNumber?: string
+  ): Promise<boolean> => {
+    setIsLoading(true)
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Check if user already exists
+    const storedUsers = JSON.parse(localStorage.getItem('luxe_users') || '[]')
+    const exists = storedUsers.some((u: any) => u.email === email)
+
+    if (exists) {
+      setIsLoading(false)
+      return false
+    }
+
+    // Create new agent
+    const newAgent = {
+      id: Date.now().toString(),
+      email,
+      password, // In production, this would be hashed
+      name,
+      phone,
+      licenseNumber,
+      favorites: [],
+      savedSearches: [],
+      createdAt: new Date().toISOString(),
+      role: 'agent'
+    }
+
+    storedUsers.push(newAgent)
+    localStorage.setItem('luxe_users', JSON.stringify(storedUsers))
+
+    const agentData: User = {
+      id: newAgent.id,
+      email: newAgent.email,
+      name: newAgent.name,
+      phone: newAgent.phone,
+      favorites: [],
+      savedSearches: [],
+      createdAt: newAgent.createdAt,
+      role: 'agent'
+    }
+
+    setUser(agentData)
+    localStorage.setItem('luxe_user', JSON.stringify(agentData))
+    localStorage.setItem('luxe_auth', 'true')
+    setIsLoading(false)
+    return true
+  }
+
   const logout = () => {
     setUser(null)
     localStorage.removeItem('luxe_user')
@@ -212,6 +269,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         loginAgent,
         signup,
+        signupAgent,
         logout,
         updateUser,
         addFavorite,
