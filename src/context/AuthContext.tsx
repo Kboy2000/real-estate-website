@@ -8,11 +8,13 @@ interface User {
   favorites: string[]
   savedSearches: any[]
   createdAt: string
+  role: 'user' | 'agent'
 }
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
+  loginAgent: (email: string, password: string) => Promise<boolean>
   signup: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
   logout: () => void
   updateUser: (updates: Partial<User>) => void
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedUser = localStorage.getItem('luxe_user')
     const storedAuth = localStorage.getItem('luxe_auth')
-    
+
     if (storedUser && storedAuth) {
       try {
         setUser(JSON.parse(storedUser))
@@ -55,14 +57,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 800))
-    
+
     // Check if user exists in localStorage
     const storedUsers = JSON.parse(localStorage.getItem('luxe_users') || '[]')
     const foundUser = storedUsers.find((u: any) => u.email === email && u.password === password)
-    
+
     if (foundUser) {
       const userData: User = {
         id: foundUser.id,
@@ -72,15 +74,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         favorites: foundUser.favorites || [],
         savedSearches: foundUser.savedSearches || [],
         createdAt: foundUser.createdAt,
+        role: 'user',
       }
-      
+
       setUser(userData)
       localStorage.setItem('luxe_user', JSON.stringify(userData))
       localStorage.setItem('luxe_auth', 'true')
       setIsLoading(false)
       return true
     }
-    
+
+    setIsLoading(false)
+    return false
+  }
+
+  const loginAgent = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true)
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    // Mock agent credentials
+    if (email === 'agent@luxe.com' && password === 'agent123') {
+      const agentData: User = {
+        id: 'agent-1',
+        email: 'agent@luxe.com',
+        name: 'Luxe Agent',
+        favorites: [],
+        savedSearches: [],
+        createdAt: new Date().toISOString(),
+        role: 'agent'
+      }
+
+      setUser(agentData)
+      localStorage.setItem('luxe_user', JSON.stringify(agentData))
+      localStorage.setItem('luxe_auth', 'true')
+      setIsLoading(false)
+      return true
+    }
+
     setIsLoading(false)
     return false
   }
@@ -92,19 +122,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     phone?: string
   ): Promise<boolean> => {
     setIsLoading(true)
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // Check if user already exists
     const storedUsers = JSON.parse(localStorage.getItem('luxe_users') || '[]')
     const exists = storedUsers.some((u: any) => u.email === email)
-    
+
     if (exists) {
       setIsLoading(false)
       return false
     }
-    
+
     // Create new user
     const newUser = {
       id: Date.now().toString(),
@@ -115,11 +145,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       favorites: [],
       savedSearches: [],
       createdAt: new Date().toISOString(),
+      role: 'user'
     }
-    
+
     storedUsers.push(newUser)
     localStorage.setItem('luxe_users', JSON.stringify(storedUsers))
-    
+
     const userData: User = {
       id: newUser.id,
       email: newUser.email,
@@ -128,8 +159,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       favorites: [],
       savedSearches: [],
       createdAt: newUser.createdAt,
+      role: 'user'
     }
-    
+
     setUser(userData)
     localStorage.setItem('luxe_user', JSON.stringify(userData))
     localStorage.setItem('luxe_auth', 'true')
@@ -145,11 +177,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUser = (updates: Partial<User>) => {
     if (!user) return
-    
+
     const updatedUser = { ...user, ...updates }
     setUser(updatedUser)
     localStorage.setItem('luxe_user', JSON.stringify(updatedUser))
-    
+
     // Also update in users array
     const storedUsers = JSON.parse(localStorage.getItem('luxe_users') || '[]')
     const userIndex = storedUsers.findIndex((u: any) => u.id === user.id)
@@ -161,7 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const addFavorite = (propertyId: string) => {
     if (!user) return
-    
+
     if (!user.favorites.includes(propertyId)) {
       updateUser({ favorites: [...user.favorites, propertyId] })
     }
@@ -169,7 +201,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const removeFavorite = (propertyId: string) => {
     if (!user) return
-    
+
     updateUser({ favorites: user.favorites.filter(id => id !== propertyId) })
   }
 
@@ -178,6 +210,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         login,
+        loginAgent,
         signup,
         logout,
         updateUser,
@@ -191,4 +224,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   )
 }
-
