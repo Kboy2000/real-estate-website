@@ -3,10 +3,11 @@ import { useAuth } from '../context/AuthContext'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
+  requireRole?: 'user' | 'agent'
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth()
+const ProtectedRoute = ({ children, requireRole }: ProtectedRouteProps) => {
+  const { isAuthenticated, user, isLoading } = useAuth()
 
   if (isLoading) {
     return (
@@ -23,8 +24,19 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />
   }
 
+  // Role-based access control
+  if (requireRole && user?.role !== requireRole) {
+    // Redirect agents trying to access client pages to agent dashboard
+    if (user?.role === 'agent' && requireRole === 'user') {
+      return <Navigate to="/agent/dashboard" replace />
+    }
+    // Redirect users trying to access agent pages to user dashboard
+    if (user?.role === 'user' && requireRole === 'agent') {
+      return <Navigate to="/dashboard" replace />
+    }
+  }
+
   return <>{children}</>
 }
 
 export default ProtectedRoute
-

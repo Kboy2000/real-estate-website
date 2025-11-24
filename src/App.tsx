@@ -44,7 +44,7 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireRole="user">
                   <Dashboard />
                 </ProtectedRoute>
               }
@@ -52,7 +52,7 @@ function App() {
             <Route
               path="/favorites"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireRole="user">
                   <Favorites />
                 </ProtectedRoute>
               }
@@ -63,7 +63,7 @@ function App() {
             <Route
               path="/agent/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireRole="agent">
                   <AgentDashboard />
                 </ProtectedRoute>
               }
